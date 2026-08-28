@@ -37,21 +37,50 @@ Proyecto1MLNS/
 
 ## Instalación y configuración del entorno
 
-```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+### 1. Entorno virtual
+
+El proyecto usa un entorno virtual en `venv/` (ignorado por git). Desde la raíz del repo:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1        # cmd: .\venv\Scripts\activate.bat  |  bash: source venv/Scripts/activate
+python -m pip install -r requirements.txt
 ```
 
-Configurar las credenciales de Kaggle como se indica arriba antes de ejecutar el notebook.
+**Decisión — versión de Python.** El entorno se probó con Python 3.14.6. Las restricciones en `requirements.txt` se dejaron como cota inferior + cota de *major* (p. ej. `numpy>=1.26,<3.0`) en lugar de pines cerrados, porque los pines antiguos (`numpy<2.0`, `scikit-learn<1.7`, ...) no tienen *wheels* para Python 3.14 y fallan al compilar. Con estas cotas `pip` resuelve a `numpy 2.5`, `scikit-learn 1.9`, `opencv-python 4.14`, que cubren todo lo que el notebook importa. Con un Python anterior (3.11–3.12) el mismo archivo resuelve eligiendo versiones más viejas dentro del rango.
+
+### 2. Kernel de Jupyter apuntando al venv
+
+Para que el notebook se ejecute **siempre contra este entorno** (no contra el Python global ni otro venv), se registra el venv como kernel de Jupyter con nombre propio:
+
+```powershell
+.\venv\Scripts\python.exe -m ipykernel install --user --name proyecto1mlns --display-name "Python (Proyecto1MLNS)"
+```
+
+**Decisión — por qué un kernel con nombre.** Jupyter y VS Code descubren kernels de forma global; sin uno dedicado es fácil abrir el notebook con un intérprete que no tiene las dependencias, o que tiene otras versiones. Un kernel explícito (`Python (Proyecto1MLNS)`) elimina la ambigüedad y es reproducible por el compañero de equipo y por el corrector: clonar, crear el venv, correr el comando de arriba y seleccionar ese kernel.
+
+Verificar que quedó registrado:
+
+```powershell
+.\venv\Scripts\python.exe -m jupyter kernelspec list
+# debe listar:  proyecto1mlns   C:\Users\<usuario>\AppData\Roaming\jupyter\kernels\proyecto1mlns
+```
+
+### 3. Credenciales de Kaggle
+
+Configurar `kaggle.json` como se indica en la sección [Dataset](#dataset) antes de ejecutar el notebook.
 
 ## Cómo ejecutar el notebook
 
-1. `jupyter notebook notebooks/microproyecto1_paleta_colores.ipynb` (o abrir en VS Code / JupyterLab).
-2. Ejecutar todas las celdas en orden (`Run All`). La primera ejecución tardará más por las descargas vía `kagglehub`.
-3. Antes de entregar, exportar a HTML con todas las celdas ya ejecutadas:
-   ```bash
-   jupyter nbconvert --to html --output-dir reports notebooks/microproyecto1_paleta_colores.ipynb
+1. Abrir `notebooks/microproyecto1_paleta_colores.ipynb` en VS Code o JupyterLab.
+2. Seleccionar el kernel **`Python (Proyecto1MLNS)`**:
+   - VS Code: selector de kernel (arriba a la derecha) -> *Select Another Kernel...* -> *Jupyter Kernel...* -> `Python (Proyecto1MLNS)`. Si no aparece, `Ctrl+Shift+P` -> *Developer: Reload Window* y reintentar. Alternativa equivalente: *Python Environments...* -> `.\venv\Scripts\python.exe`.
+   - JupyterLab: menú *Kernel -> Change Kernel...*.
+3. Confirmar el entorno ejecutando en una celda: `import sys; print(sys.executable)` -> debe terminar en `...\Proyecto1MLNS\venv\Scripts\python.exe`.
+4. `Run All`. La primera ejecución tarda más por las descargas vía `kagglehub`.
+5. Antes de entregar, exportar a HTML con todas las celdas ya ejecutadas:
+   ```powershell
+   .\venv\Scripts\python.exe -m jupyter nbconvert --to html --output-dir reports notebooks/microproyecto1_paleta_colores.ipynb
    ```
 
 ## Entregable y rúbrica
@@ -71,19 +100,21 @@ Ver [`PLAN.md`](./PLAN.md) para el desglose del trabajo pendiente mapeado a esta
 
 ## Estado actual del proyecto
 
-El notebook está en etapa temprana (solo la actividad de recolección de imágenes, parcialmente):
+El notebook completó la actividad de recolección de imágenes (10%); el resto sigue pendiente:
 
-- ✅ Descarga de datos vía `kagglehub` y carga de `classes.csv`.
-- ✅ Selección estratificada: 6 estilos (Action painting, Baroque, Cubism, Impressionism, Romanticism, Ukiyo e), 10 imágenes por estilo.
-- ✅ Descarga de las imágenes seleccionadas.
-- 🟡 Visualización de la selección: solo se muestra el estilo "Cubism" (falta el resto) y sin justificación en markdown de los criterios de selección.
-- ❌ Pipeline de preparación de imágenes (resize, espacio de color, normalización).
-- ❌ Modelo de clustering por imagen con búsqueda de hiperparámetros.
-- ❌ Función de generación de paleta/muestrario.
-- ❌ Visualización 2D (t-SNE) de la distribución de colores.
-- ❌ Muestra final con ≥4 imágenes de estilos distintos.
-- ❌ Documentación en markdown de las decisiones (el notebook no tiene celdas markdown todavía).
-- ❌ Export a `.html`.
+- [hecho] Entorno reproducible: venv en `venv/` (Python 3.14.6), `requirements.txt` con todas las dependencias del notebook, y kernel de Jupyter `Python (Proyecto1MLNS)` registrado apuntando al venv. Ver [Instalación y configuración del entorno](#instalación-y-configuración-del-entorno).
+- [hecho] Descarga de datos vía `kagglehub` y carga de `classes.csv`.
+- [hecho] Selección final: 10 imágenes en total (2 por estilo × 5 estilos: Action painting, Baroque, Cubism, Impressionism, Ukiyo e), dentro del rango 6–10 pedido por la rúbrica, con justificación en markdown del criterio de selección.
+- [hecho] Descarga de las imágenes seleccionadas.
+- [hecho] Visualización de la selección: grilla con las 10 imágenes agrupadas por estilo.
+- [hecho] Pipeline de preparación de imágenes: conversión a RGB, resize a 150 px, conversión a espacio de color Lab, aplanado de píxeles, con justificación de cada decisión (incluida la de no normalizar) y evidencia cuantitativa/visual del resize.
+- [pendiente] Notebook editado pero no re-ejecutado en esta sesión (sin `kagglehub`/credenciales de Kaggle en esta máquina) — falta un `Run All` para que los outputs queden actualizados antes de commitear/entregar.
+- [pendiente] Modelo de clustering por imagen con búsqueda de hiperparámetros.
+- [pendiente] Función de generación de paleta/muestrario.
+- [pendiente] Visualización 2D (t-SNE) de la distribución de colores.
+- [pendiente] Muestra final con ≥4 imágenes de estilos distintos.
+- [pendiente] Documentación en markdown de las decisiones a lo largo de todo el notebook.
+- [pendiente] Export a `.html`.
 
 ## Equipo
 

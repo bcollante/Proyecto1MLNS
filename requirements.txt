@@ -1,26 +1,30 @@
-# Descarga de datos
-kagglehub>=0.3,<1.0
+# Dependencias para correr notebooks/microproyecto1_paleta_colores.ipynb
+# Instalar con:  python -m pip install -r requirements.txt
 
-# Manipulación de datos
+# --- Descarga de datos (celdas 1, 7, 12) ---
+kagglehub>=0.3,<2.0
+
+# --- Manipulacion de datos (celdas 2, 4, 5) ---
 pandas>=2.0,<3.0
-numpy>=1.24,<2.0
+numpy>=1.26,<3.0
 
-# Procesamiento de imágenes
+# --- Procesamiento de imagenes (celda 8: cv2, PIL) ---
 opencv-python>=4.8,<5.0
-pillow>=10.0,<11.0
+pillow>=10.0,<12.0
 
-# Machine learning no supervisado (clustering, reducción de dimensionalidad)
-scikit-learn>=1.3,<2.0
+# --- Clustering y reduccion de dimensionalidad (celda 8: KMeans, MeanShift; t-SNE pendiente) ---
+scikit-learn>=1.4,<2.0
 scipy>=1.11,<2.0
 
-# Visualización
-matplotlib>=3.7,<4.0
+# --- Visualizacion (celdas 8, 12) ---
+matplotlib>=3.8,<4.0
 
-# Entorno Jupyter y exportación a HTML
+# --- Entorno Jupyter y exportacion a .html (entregable) ---
+ipykernel>=6.29
 jupyter>=1.0,<2.0
 notebook>=7.0,<8.0
 nbconvert>=7.0,<8.0
 
-# --- Opcionales, agregar solo si terminan usándose ---
-# scikit-image>=0.22,<0.23   # métricas de color adicionales (p.ej. deltaE en espacio Lab)
-# seaborn>=0.13,<0.14        # embellecer el scatterplot de t-SNE
+# --- Opcionales, descomentar solo si terminan usandose ---
+# scikit-image>=0.22    # metricas de color adicionales (p.ej. deltaE en espacio Lab)
+# seaborn>=0.13         # embellecer el scatterplot de t-SNE
