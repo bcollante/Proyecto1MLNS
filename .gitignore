@@ -1,0 +1,27 @@
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores/IDE
+.vscode/
+.idea/
+
+# reports/: solo se versiona el .html final de entrega, no archivos intermedios/borradores
+reports/*
+!reports/.gitkeep
+!reports/*.html
