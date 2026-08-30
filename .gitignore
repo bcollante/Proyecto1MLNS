@@ -28,3 +28,4 @@ reports/*
 !reports/*.html
 !reports/figures/
 !reports/figures/*.jpg
+!reports/*.pdf
