@@ -21,7 +21,10 @@ desktop.ini
 .vscode/
 .idea/
 
-# reports/: solo se versiona el .html final de entrega, no archivos intermedios/borradores
+# reports/: solo se versiona el .html final de entrega y las figuras del README,
+# no archivos intermedios/borradores
 reports/*
 !reports/.gitkeep
 !reports/*.html
+!reports/figures/
+!reports/figures/*.jpg

@@ -19,33 +19,34 @@ Se marca cada paso como `[pendiente]`, `[en progreso]` o `[hecho]`, y se actuali
 
 [hecho] Los pasos de (b) quedaron encapsulados en la función `preparar_imagen(path, max_dim=150)` -> `(img_rgb, pixeles_lab)`, aplicable a cualquier imagen del dataset (no solo a las 10 seleccionadas). Se aplicó a las 10 imágenes seleccionadas; los resultados quedan en el diccionario `imagenes_preparadas` (filename -> style/artist/img_rgb/pixeles_lab) para el paso de clustering.
 
-## (d) Modelo de clustering — 30% (mayor peso de la rúbrica)
+## (d) Modelo de clustering — 30% (mayor peso de la rúbrica) [hecho]
 
-[pendiente] Elegir y justificar el algoritmo de clustering (K-Means, MeanShift, u otro — ya están importados ambos candidatos en el notebook).
-[pendiente] Implementar **búsqueda de hiperparámetros por imagen**: el número de clusters (k) no puede ser fijo, debe determinarse individualmente para cada imagen (p. ej. método del codo o silhouette score sobre un rango de k, o MeanShift con bandwidth estimado vía `estimate_bandwidth`).
-[pendiente] Justificar la métrica de evaluación usada para elegir k (o el equivalente en MeanShift).
+[hecho] Algoritmo: **K-Means** (`k-means++`, `n_init=10`, `random_state=42`) como método principal, sobre los píxeles Lab, con barrido de `k` en 2..12 por imagen. Funciones `barrido_k_kmeans`, `elegir_k_codo`, `contraste_meanshift`; resultados en el dict `resultados_clustering` (curva_k, best_k, k_silhouette, centros_lab, labels, proporciones, ms_n_clusters, ms_bandwidth).
+[hecho] Búsqueda de `k` **por imagen**: criterio primario = **método del codo** (Kneedle por distancia a la cuerda sobre la curva de inercia). Da `k` = 4 o 5 según la obra. Se descartó silhouette como criterio primario porque colapsa a `k=2` en 9/10 imágenes (sesgo conocido hacia pocos clusters); queda como control (valores 0.38–0.58 en el `k` elegido, confirman estructura).
+[hecho] Contraste independiente con **MeanShift** (`bandwidth` por imagen vía `estimate_bandwidth`, `quantile=0.2`, submuestra de 3000 px): 2–6 clusters en 9/10 imágenes, en el mismo orden de magnitud que el codo (una degeneración a 1 cluster en el Pollock por `bandwidth` grande, documentada).
+[hecho] Gráfica 5x2: inercia (codo, `k` elegido) + silhouette (control) por imagen.
 
-## (e) Visualización 2D de la distribución de colores
+## (e) Visualización 2D de la distribución de colores [hecho]
 
-[pendiente] Aplicar una técnica de reducción de dimensionalidad (t-SNE sugerido, `sklearn.manifold.TSNE`) sobre los colores de la imagen y graficar en 2D, coloreando por cluster asignado.
+[hecho] Reducción de dimensionalidad con **t-SNE** (`sklearn.manifold.TSNE`, `perplexity=30`, `init="pca"`, `random_state=42`) sobre una submuestra de 3.000 píxeles Lab por imagen (t-SNE es O(n^2)). Funciones `lab_a_rgb` (Lab 8-bit -> RGB [0,1] para colorear los puntos con su color real) y `proyeccion_2d_colores` (corre t-SNE sobre la pila `[muestra de píxeles ; centros de K-Means]` para situar los centros en el mismo plano, ya que t-SNE no tiene `transform`). Grilla 5x2: por imagen, scatter de la nube de color (cada punto con su RGB real) + centros de K-Means como `X` con tamaño proporcional a su peso y rótulo con el índice de clúster. Resultados en el dict `proyecciones_2d` (xy_pix, xy_cen, idx, labels) para reutilizar en la actividad (g). Celdas markdown justifican la elección de t-SNE sobre PCA, el submuestreo, `perplexity`, y el criterio de coloreado; celda "Lectura de la visualización 2D" al cierre.
 
-## (f) Función de generación de paleta — 15%
+## (f) Función de generación de paleta — 15% [hecho]
 
-[pendiente] Función que, a partir de los centros de los clusters (colores dominantes), genere un muestrario/swatch visual (p. ej. barras de color ordenadas, con su proporción en la imagen).
+[hecho] `generar_paleta(centros_lab, proporciones)` devuelve un `DataFrame` (`rank, hex, R, G, B, proporcion`) ordenado por proporción descendente: los centros de K-Means en Lab se pasan a sRGB (vía `lab_a_rgb`) y a código `#rrggbb`. `mostrar_paleta(paleta, ax, titulo)` dibuja el muestrario como franjas horizontales de ancho proporcional al peso de cada color, rotuladas con hex + porcentaje (texto negro/blanco según luminancia). Grilla 5x2 con la paleta de las 10 imágenes + impresión del `DataFrame` de una de ellas. Resultados en el dict `paletas` (filename -> DataFrame). Celda markdown justifica el formato de salida, el orden y el ancho proporcional.
 
-## (g) Muestra final — 25%
+## (g) Muestra final — 25% [hecho]
 
-[pendiente] Sección final del notebook que, para **al menos 4 imágenes de estilos distintos**, corra el pipeline completo y muestre: imagen original, paleta generada, y visualización 2D de la distribución de colores.
+[hecho] Sección "## Muestra final (actividad g)": se toma un representante por estilo (5 imágenes, > el mínimo de 4) y se dibuja una grilla `5 x 3` con, por fila, imagen preparada + paleta generada (actividad f) + distribución de color 2D t-SNE (actividad e). Celda markdown "### Lectura de la muestra final" conecta las tres vistas (el grabado monocromo de Rembrandt da una paleta casi neutra; los rojos de acento del Pissarro y el Bush; `k` = 4 o 5 por imagen).
 
-## (h) Documentación — requisito transversal del entregable
+## (h) Documentación — requisito transversal del entregable [hecho]
 
-[en progreso] Agregar celdas markdown a lo largo de todo el notebook justificando cada decisión. Ya cubierto para las actividades (a) (selección de imágenes) y (b)/(c) (espacio de color Lab, resize, no normalizar, encapsulado en función); falta para algoritmo y métricas de clustering, y diseño de la función de paleta, a medida que se implementan.
+[hecho] Celdas markdown de justificación a lo largo de todo el notebook: (a) selección de imágenes, (b)/(c) espacio de color Lab, resize, no normalizar y encapsulado en función, (d) K-Means, codo vs silhouette, MeanShift de contraste y lectura de resultados, (e) t-SNE vs PCA, submuestreo, perplexity, coloreado por color real y lectura de la viz 2D, (f) formato de salida de la paleta, orden y ancho proporcional, (g) lectura de la muestra final. 20 celdas markdown / 19 de código.
 
-## (i) Exportación y verificación final
+## (i) Exportación y verificación final [hecho]
 
-[pendiente] Ejecutar el notebook completo de principio a fin (`Run All`) y confirmar que todas las celdas muestran su output.
-[pendiente] Exportar con `jupyter nbconvert --to html --output-dir reports notebooks/microproyecto1_paleta_colores.ipynb`.
-[pendiente] Revisar el `.html` generado antes de entregar ambos archivos (`.ipynb` + `.html`).
+[hecho] Notebook ejecutado de principio a fin con `jupyter nbconvert --to notebook --execute --inplace` (kernel = venv del repo). Las 19 celdas de código tienen output embebido, `execution_count` 1..19, sin errores ni tracebacks. Excepción: dos celdas markdown de cierre (lectura de la viz 2D y lectura de la muestra final) se ajustaron después de ejecutar (no requieren ejecución).
+[hecho] Exportado a `reports/microproyecto1_paleta_colores.html` con `jupyter nbconvert --to html --output-dir reports ...` (~7.8 MB, 7 figuras embebidas como data-URI).
+[hecho] `.html` revisado: contiene todas las secciones (a)-(g), sin `Traceback` ni salidas de error. Único warning de nbconvert: "Alternative text is missing on 6 image(s)" (texto alt de las figuras; no afecta el contenido).
 
 ## Notas de coordinación
 
