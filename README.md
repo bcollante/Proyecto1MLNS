@@ -89,33 +89,49 @@ Toda la lógica (preprocesamiento, clustering, generación de paleta, visualizac
 
 ## Arquitectura del método
 
-```
-classes.csv ──► filtro por estilo ──► muestreo estratificado (2 por estilo, seed=42)
-                                             │
-                                             ▼  10 imágenes
-                                    kagglehub.dataset_download
-                                             │
-                    ┌────────────────────────▼─────────────────────────┐
-                    │  preparar_imagen(path, max_dim=150)              │
-                    │  BGR ─► RGB ─► resize INTER_AREA ─► CIELAB       │
-                    │  ─► aplanado a (n_pixeles, 3)                    │
-                    └────────────────────────┬─────────────────────────┘
-                                             │  X en R^(n x 3), n ~ 15.000–18.500
-                    ┌────────────────────────▼─────────────────────────┐
-                    │  barrido_k_kmeans(X, k = 2..12)                  │
-                    │    inercia J(k)  +  silhouette S(k)              │
-                    │  elegir_k_codo (Kneedle)  ─►  k*(I)              │
-                    │  contraste_meanshift(X)   ─►  verificación       │
-                    └───────┬───────────────────────────┬──────────────┘
-                            │ centros_lab, proporciones │
-              ┌─────────────▼───────────┐   ┌───────────▼──────────────┐
-              │ generar_paleta()        │   │ proyeccion_2d_colores()  │
-              │ Lab ─► sRGB ─► #rrggbb  │   │ t-SNE sobre [X_s ; C]    │
-              │ DataFrame ordenado      │   │ scatter con color real   │
-              └─────────────┬───────────┘   └───────────┬──────────────┘
-                            └────────────┬──────────────┘
-                                         ▼
-                              Muestra final (actividad g)
+```mermaid
+flowchart TD
+    CSV["data/classes.csv<br/>metadatos de ~80.000 obras"]
+    FILTRO["Filtro por estilo<br/>5 estilos de paletas contrastantes"]
+    MUESTREO["Muestreo estratificado<br/>N_PER_STYLE = 2 · random_state = 42"]
+    DESCARGA["kagglehub.dataset_download<br/>10 imágenes"]
+
+    CSV --> FILTRO --> MUESTREO --> DESCARGA
+
+    subgraph PREP["Actividades b y c · preparar_imagen(path, max_dim=150)"]
+        direction TB
+        P1["BGR a RGB"]
+        P2["Resize del lado mayor a 150 px<br/>cv2.INTER_AREA"]
+        P3["RGB a CIELAB<br/>8 bits, canales 0-255"]
+        P4["Aplanado a matriz n x 3"]
+        P1 --> P2 --> P3 --> P4
+    end
+
+    DESCARGA --> P1
+    P4 --> X["X de tamaño n x 3<br/>n entre 15.000 y 18.500 píxeles"]
+
+    subgraph CLUS["Actividad d · agrupación por imagen"]
+        direction TB
+        BARRIDO["barrido_k_kmeans(X, k = 2..12)<br/>inercia J(k) + silhouette S(k)"]
+        CODO["elegir_k_codo · Kneedle<br/>criterio de decisión"]
+        MS["contraste_meanshift(X)<br/>verificación independiente"]
+        BARRIDO --> CODO
+        BARRIDO -.-> MS
+    end
+
+    X --> BARRIDO
+    CODO --> K["k*(I) = 4 o 5 según la imagen<br/>centros_lab + proporciones"]
+
+    subgraph SALIDA["Actividades f y e"]
+        direction LR
+        PALETA["generar_paleta()<br/>Lab a sRGB a hex<br/>DataFrame ordenado por proporción"]
+        TSNE["proyeccion_2d_colores()<br/>t-SNE sobre muestra + centros<br/>scatter con el color real de cada píxel"]
+    end
+
+    K --> PALETA
+    K --> TSNE
+    PALETA --> FINAL["Actividad g · muestra final<br/>imagen preparada + paleta + nube 2D"]
+    TSNE --> FINAL
 ```
 
 ---
